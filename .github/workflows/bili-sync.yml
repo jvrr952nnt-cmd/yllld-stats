@@ -23,6 +23,6 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add stats.json bili-error.txt || true
+          git add stats.json bili-error.txt bili-debug.json || true
           git diff --staged --quiet || git commit -m 'auto sync bilibili stats'
           git push
