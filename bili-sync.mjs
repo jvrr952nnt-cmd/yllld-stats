@@ -1,67 +1,54 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const MID = '3546720686312292';
 const NAME = 'YLLLD_';
-const KNOWN = ['BV1eUxE6kEiQ','BV12doZBJE8k','BV1nSDkB2ESU','BV1SFJU6KEq4','BV1FXoLBpEZ8','BV1Uvyvz3EvQ','BV1fqpu6EE6j','BV114s26qEvJ'];
+const BVS = ['BV1eUxE6kEiQ','BV12doZBJE8k','BV1nSDkB2ESU','BV1SFJU6KEq4','BV1FXoLBpEZ8','BV1Uvyvz3EvQ','BV1fqpu6EE6j','BV114s26qEvJ'];
 const today = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const errors = [];
 
-async function getJson(url, headers = {}) {
-  const r = await fetch(url, { headers: { 'user-agent': UA, ...headers } });
+async function text(url, headers = {}) {
+  const r = await fetch(url, { headers: { 'user-agent': UA, 'accept-language': 'zh-CN,zh;q=0.9', ...headers } });
   if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
-  const t = await r.text();
-  try { return JSON.parse(t); } catch (e) { throw new Error(url + ' not JSON: ' + t.slice(0, 100)); }
+  return r.text();
 }
 
-async function listBvids() {
-  const H = { referer: 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(NAME), accept: 'application/json, text/plain, */*', 'accept-language': 'zh-CN,zh;q=0.9' };
-  const out = [];
-  for (let pn = 1; pn <= 10; pn++) {
-    const j = await getJson('https://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=' + encodeURIComponent(NAME) + '&order=pubdate&page=' + pn, H);
-    if (j.code !== 0) throw new Error('search code ' + j.code + ' ' + (j.message || ''));
-    const list = (j.data && j.data.result) || [];
-    for (const v of list) if (v && String(v.mid) === MID && v.bvid && !out.includes(v.bvid)) out.push(v.bvid);
-    if (pn === 1) fs.writeFileSync('bili-debug.json', JSON.stringify({ count: out.length, sample: list.filter((v) => String(v.mid) === MID).slice(0, 1) }, null, 2));
-    if (list.length < 20) break;
-    await sleep(1200);
-  }
-  if (!out.length) throw new Error('empty search');
-  return out;
+async function videoStat(bv) {
+  const html = await text('https://www.bilibili.com/video/' + bv, { referer: 'https://www.bilibili.com/' });
+  const m = html.match(/"stat":({[^}]+})/);
+  if (!m) throw new Error('no stat in ' + bv);
+  return JSON.parse(m[1]);
 }
 
 async function main() {
-  let bvids, listSource = 'search';
-  try { bvids = await listBvids(); } catch (e) {
-    errors.push('search: ' + e.message);
-    bvids = KNOWN; listSource = 'known';
-  }
-  console.log('videos', bvids.length, listSource, bvids.slice(0, 5));
-
   let play = 0, like = 0, inter = 0, videos = 0;
-  for (const b of bvids) {
+  for (const bv of BVS) {
     try {
-      const j = await getJson('https://api.bilibili.com/x/web-interface/view?bvid=' + b, { referer: 'https://www.bilibili.com/video/' + b });
-      if (j.code !== 0) { errors.push('view ' + b + ' code ' + j.code + ' ' + (j.message || '')); continue; }
-      const s = j.data.stat || {};
+      const s = await videoStat(bv);
       play += Number(s.view) || 0;
       like += Number(s.like) || 0;
       inter += (Number(s.reply) || 0) + (Number(s.favorite) || 0) + (Number(s.coin) || 0) + (Number(s.share) || 0) + (Number(s.danmaku) || 0);
       videos++;
-    } catch (e) { errors.push('view ' + b + ': ' + e.message); }
-    await sleep(180);
+    } catch (e) { errors.push(bv + ': ' + e.message); }
+    await new Promise((r) => setTimeout(r, 350));
   }
-  let fans = 0;
+  let fans = 0, totalVideos = 0;
   try {
-    const rel = await getJson('https://api.bilibili.com/x/relation/stat?vmid=' + MID, { referer: 'https://space.bilibili.com/' + MID });
-    fans = Number(rel.data && rel.data.follower) || 0;
-  } catch (e) { errors.push('relation: ' + e.message); }
-  fs.writeFileSync('bili-debug.json', JSON.stringify({ listSource, bvids, videos, play, like, inter, fans, errors }, null, 2));
-  if (videos === 0) throw new Error('no video stats');
+    const html = await text('https://search.bilibili.com/all?keyword=' + encodeURIComponent(NAME), { referer: 'https://www.bilibili.com/' });
+    const fm = html.match(new RegExp('mid:' + MID + ',[\\s\\S]{0,600}?fans:(\\d+),videos:(\\d+)'));
+    if (fm) { fans = Number(fm[1]) || 0; totalVideos = Number(fm[2]) || 0; }
+  } catch (e) { errors.push('search: ' + e.message); }
+  if (!fans) {
+    try {
+      const r = await fetch('https://api.bilibili.com/x/relation/stat?vmid=' + MID, { headers: { 'user-agent': UA, referer: 'https://space.bilibili.com/' + MID } });
+      if (r.ok) { const j = await r.json(); fans = Number(j.data && j.data.follower) || 0; }
+      else errors.push('relation HTTP ' + r.status);
+    } catch (e) { errors.push('relation: ' + e.message); }
+  }
+  const row = { date: today(), play, like, inter, fans, videos, totalVideos, source: 'auto', scope: 'featured' };
+  fs.writeFileSync('bili-debug.json', JSON.stringify({ row, errors, at: new Date().toISOString() }, null, 2));
+  if (!videos) throw new Error('no video stats');
 
-  const row = { date: today(), play, like, inter, fans, videos, source: 'auto' };
   const old = (() => { try { return JSON.parse(fs.readFileSync('stats.json', 'utf8')); } catch (e) { return {}; } })();
   const platforms = old.platforms || {};
   const bili = Array.isArray(platforms.bili) ? platforms.bili.slice() : [];
@@ -73,4 +60,4 @@ async function main() {
   fs.writeFileSync('bili-error.txt', 'ok ' + JSON.stringify(row) + '\n');
   console.log('OK', row);
 }
-main().catch((e) => { console.error('FATAL', e); fs.writeFileSync('bili-error.txt', 'FATAL ' + String(e.stack || e) + '\n' + JSON.stringify(errors, null, 2)); process.exitCode = 0; });
+main().catch((e) => { fs.writeFileSync('bili-error.txt', 'FATAL ' + String(e.stack || e) + '\n' + JSON.stringify(errors, null, 2)); process.exitCode = 0; });
