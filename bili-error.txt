@@ -1,3 +1,14 @@
 FATAL Error: no video stats
-    at main (file:///home/runner/work/yllld-stats/yllld-stats/bili-sync.mjs:60:27)
+    at main (file:///home/runner/work/yllld-stats/yllld-stats/bili-sync.mjs:62:27)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[
+  "search: https://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=YLLLD_&order=pubdate&page=1 HTTP 412",
+  "view BV1eUxE6kEiQ: https://api.bilibili.com/x/web-interface/view?bvid=BV1eUxE6kEiQ HTTP 412",
+  "view BV12doZBJE8k: https://api.bilibili.com/x/web-interface/view?bvid=BV12doZBJE8k HTTP 412",
+  "view BV1nSDkB2ESU: https://api.bilibili.com/x/web-interface/view?bvid=BV1nSDkB2ESU HTTP 412",
+  "view BV1SFJU6KEq4: https://api.bilibili.com/x/web-interface/view?bvid=BV1SFJU6KEq4 HTTP 412",
+  "view BV1FXoLBpEZ8: https://api.bilibili.com/x/web-interface/view?bvid=BV1FXoLBpEZ8 HTTP 412",
+  "view BV1Uvyvz3EvQ: https://api.bilibili.com/x/web-interface/view?bvid=BV1Uvyvz3EvQ HTTP 412",
+  "view BV1fqpu6EE6j: https://api.bilibili.com/x/web-interface/view?bvid=BV1fqpu6EE6j HTTP 412",
+  "view BV114s26qEvJ: https://api.bilibili.com/x/web-interface/view?bvid=BV114s26qEvJ HTTP 412"
+]
