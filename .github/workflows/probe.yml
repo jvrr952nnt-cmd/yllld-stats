@@ -1,0 +1,27 @@
+name: probe
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch Bilibili
+        run: |
+          set -x
+          curl -sS -o probe.json -w '%{http_code}\n' \
+            -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' \
+            -H 'Referer: https://space.bilibili.com/3546720686312292' \
+            'https://api.bilibili.com/x/relation/stat?vmid=3546720686312292' || true
+          head -c 500 probe.json || true
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add probe.json
+          git commit -m 'probe result' || true
+          git push || true
