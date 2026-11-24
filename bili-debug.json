@@ -4,9 +4,9 @@
     "play": 0,
     "like": 0,
     "inter": 0,
-    "fans": 133,
+    "fans": 135,
     "videos": 0,
-    "totalVideos": 0,
+    "totalVideos": 49,
     "source": "auto",
     "scope": "featured"
   },
@@ -20,5 +20,5 @@
     "BV1fqpu6EE6j: https://www.bilibili.com/video/BV1fqpu6EE6j HTTP 412",
     "BV114s26qEvJ: https://www.bilibili.com/video/BV114s26qEvJ HTTP 412"
   ],
-  "at": "2026-11-24T02:56:19.443Z"
+  "at": "2026-11-24T14:57:01.994Z"
 }
