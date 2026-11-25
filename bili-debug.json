@@ -1,12 +1,12 @@
 {
   "row": {
-    "date": "2026-11-24",
+    "date": "2026-11-25",
     "play": 0,
     "like": 0,
     "inter": 0,
-    "fans": 135,
+    "fans": 140,
     "videos": 0,
-    "totalVideos": 49,
+    "totalVideos": 0,
     "source": "auto",
     "scope": "featured"
   },
@@ -20,5 +20,5 @@
     "BV1fqpu6EE6j: https://www.bilibili.com/video/BV1fqpu6EE6j HTTP 412",
     "BV114s26qEvJ: https://www.bilibili.com/video/BV114s26qEvJ HTTP 412"
   ],
-  "at": "2026-11-24T14:57:01.994Z"
+  "at": "2026-11-25T00:50:28.934Z"
 }
